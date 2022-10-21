@@ -2,6 +2,8 @@ github.com/andybalholm/brotli v1.0.4 h1:V7DdXeJtZscaqfNuAdSRuRFzuiKlHSC/Zh3zl9qY
 github.com/andybalholm/brotli v1.0.4/go.mod h1:fO7iG3H7G2nSZ7m0zPUDn85XEX2GTukHGRSepvi9Eig=
 github.com/gofiber/fiber/v2 v2.38.1 h1:GEQ/Yt3Wsf2a30iTqtLXlBYJZso0JXPovt/tmj5H9jU=
 github.com/gofiber/fiber/v2 v2.38.1/go.mod h1:t0NlbaXzuGH7I+7M4paE848fNWInZ7mfxI/Er1fTth8=
+github.com/gofiber/helmet/v2 v2.2.17 h1:E2h629KUdsfg/LnxTyBW+NJVkKxnC4DXVIBRhjLeUG4=
+github.com/gofiber/helmet/v2 v2.2.17/go.mod h1:jq6+tYGHI+wIZ1n8us/RyINZDOKwCubwxNKNNoCqhQ4=
 github.com/joho/godotenv v1.4.0 h1:3l4+N6zfMWnkbPEXKng2o2/MR5mSwTrBih4ZEkkz1lg=
 github.com/joho/godotenv v1.4.0/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
 github.com/klauspost/compress v1.15.0/go.mod h1:/3/Vjq9QcHkK5uEr5lBEmyoZ1iFhe47etQ6QUkpK6sk=

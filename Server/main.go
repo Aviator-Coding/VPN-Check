@@ -7,10 +7,16 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/favicon"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/monitor"
+	"github.com/gofiber/helmet/v2"
 	"github.com/joho/godotenv"
 )
 
@@ -70,9 +76,44 @@ func main() {
 	}
 
 	app := fiber.New()
+	app.Use(helmet.New())
 
-	// GET /
-	app.Get("/", func(c *fiber.Ctx) error {
+	// Logging for the Requests
+	app.Use(
+		logger.New(),
+	)
+
+	// Favicon Icon
+	app.Use(favicon.New(favicon.Config{
+		File: "./favicon.ico",
+	}))
+
+	// Read the API Limits From the Enviroment Variable
+	limit, err := strconv.Atoi(os.Getenv("LIMIT"))
+	if err != nil {
+		limit = 5
+	}
+
+	// Limit the Amount of Connections
+	app.Use(limiter.New(limiter.Config{
+		Next: func(c *fiber.Ctx) bool {
+			return c.IP() == "127.0.0.1"
+		},
+		Max:                    limit,
+		Expiration:             30 * time.Second,
+		SkipFailedRequests:     false,
+		SkipSuccessfulRequests: false,
+		LimiterMiddleware:      limiter.SlidingWindow{},
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.IP()
+		},
+		LimitReached: func(c *fiber.Ctx) error {
+			return c.SendStatus(fiber.StatusTooManyRequests)
+		},
+	}))
+
+	// Request for the API
+	app.Get("/api", func(c *fiber.Ctx) error {
 		apiresponse := ApiResponse{
 			Date: time.Now(),
 		}
@@ -146,6 +187,10 @@ func main() {
 		apiresponse.Success = true
 		return c.JSON(clientAddress)
 	})
+	// Request for Metrics
+	app.Get("/metrics", monitor.New(monitor.Config{Title: "VPN-Check-Server Monitoring"}))
+
+	app.Static("/", "./support.html")
 
 	log.Fatal(app.Listen(os.Getenv("PORT")))
 }
