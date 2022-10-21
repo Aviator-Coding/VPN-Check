@@ -1,0 +1,22 @@
+version: '3.7'
+
+services:
+    vpn-check:
+        build: .
+        container_name: vpn-check-server
+        restart: always
+        labels:
+            #### Labels define the behavior and rules of the traefik proxy for this container ####
+            - "traefik.enable=true" # <== Enable traefik to proxy this container
+            - "traefik.http.routers.vpn-check-web.rule=Host(`MySuperCoolWebsite.de`)" # <== Your Domain Name goes here for the http rule
+            - "traefik.http.routers.vpn-check.entrypoints=web" # <== Defining the entrypoint for http, **ref: line 30
+            - "traefik.http.services.vpn-check.loadbalancer.server.port=3000"
+        networks:
+            web:
+            database:
+
+networks:
+    web:
+       external: true
+    database:
+        external: true
