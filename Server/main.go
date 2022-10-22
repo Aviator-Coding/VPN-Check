@@ -117,20 +117,26 @@ func main() {
 		apiresponse := ApiResponse{
 			Date: time.Now(),
 		}
-
+		// for key, value := range c.GetReqHeaders() {
+		// 	log.Printf("%s=%s \n", key, value)
+		// }
+		realip := c.Get("X-Real-Ip")
+		if realip == "" {
+			realip = c.IP()
+		}
 		// Check if the Sender send the Right Auth with the Request
 		if c.Get("X-KEY") != os.Getenv("SECURITYKEY") {
-			log.Printf("IP:%s Key:%s \n", c.IP(), c.Get("X-KEY"))
+			log.Printf("IP:%s Key:%s \n", realip, c.Get("X-KEY"))
 			apiresponse.Error = "has no rights"
 			apiresponse.Success = false
 			return c.JSON(apiresponse)
 		}
 
 		// Create and Format new Request
-		requestUrl := fmt.Sprintf("http://v2.api.iphub.info/ip/%s", c.IP())
+		requestUrl := fmt.Sprintf("http://v2.api.iphub.info/ip/%s", realip)
 		req, err := http.NewRequest("GET", requestUrl, nil)
 		if err != nil {
-			log.Printf("IP:%s Error:%s \n", c.IP(), err)
+			log.Printf("IP:%s Error:%s \n", realip, err)
 			apiresponse.Error = err.Error()
 			apiresponse.Success = false
 			return c.JSON(apiresponse)
@@ -140,7 +146,7 @@ func main() {
 		req.Header.Add("X-Key", os.Getenv("APIKEY"))
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			log.Printf("IP:%s Error:%s \n", c.IP(), err)
+			log.Printf("IP:%s Error:%s \n", realip, err)
 			apiresponse.Error = err.Error()
 			apiresponse.Success = false
 			return c.JSON(apiresponse)
@@ -157,7 +163,7 @@ func main() {
 
 		// Check if the Api Request has returned any Error
 		if strings.Contains(string(body), "\"error\"") {
-			log.Printf("IP:%s Error:%s \n", c.IP(), body)
+			log.Printf("IP:%s Error:%s \n", realip, body)
 			// Try to Parse the Error Message
 			var ipHubError IpHubError
 			err := json.Unmarshal(body, &ipHubError)
@@ -182,7 +188,7 @@ func main() {
 		}
 
 		// Send Response back to User
-		log.Printf("IP:%s Response:%s \n", c.IP(), body)
+		log.Printf("IP:%s Response:%s \n", realip, body)
 		apiresponse.Message = "success"
 		apiresponse.Success = true
 		return c.JSON(clientAddress)
