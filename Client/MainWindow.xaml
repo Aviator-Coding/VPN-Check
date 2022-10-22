@@ -1,0 +1,41 @@
+﻿<Window x:Class="VPN_Check.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VPN_Check"
+        ResizeMode="NoResize"
+        mc:Ignorable="d"
+        Title="VPN-Check [by Aviator]" Height="300" Width="300">
+    <Grid Name="App">
+        <StackPanel>
+            <Button Margin="10" Height="50" Name="CheckButton" Content="Check IP" Click="CheckButton_OnClick"/>
+            <StackPanel Margin="10">
+                <StackPanel Orientation="Horizontal" Width="200">
+                    <Label Width="120" Content="IP:"/>
+                    <Label Name="Ip" Content=""/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Width="200">
+                    <Label Width="120" Content="CountryCode:"/>
+                    <Label Name="countryCode" Content=""/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Width="200">
+                    <Label Width="120" Content="CountryName:"/>
+                    <Label Name="countryName" Content=""/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Width="200">
+                    <Label Width="120" Content="ASN:"/>
+                    <Label Name="Asn" Content=""/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Width="200">
+                    <Label Width="120"  Content="ISP:"/>
+                    <Label Name="isp" Content=""/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Width="200">
+                    <Label Width="120" Content="Block:"/>
+                    <Label Name="block" Content=""/>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>

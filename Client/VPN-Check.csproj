@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <RootNamespace>VPN_Check</RootNamespace>
+        <Nullable>enable</Nullable>
+        <UseWPF>true</UseWPF>
+        <ApplicationIcon>vpn.ico</ApplicationIcon>
+        <TargetFramework>net6.0-windows</TargetFramework>
+    </PropertyGroup>
+
+</Project>

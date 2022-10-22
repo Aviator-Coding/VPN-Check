@@ -191,7 +191,8 @@ func main() {
 		log.Printf("IP:%s Response:%s \n", realip, body)
 		apiresponse.Message = "success"
 		apiresponse.Success = true
-		return c.JSON(clientAddress)
+		apiresponse.Data = clientAddress
+		return c.JSON(apiresponse)
 	})
 	// Request for Metrics
 	app.Get("/metrics", monitor.New(monitor.Config{Title: "VPN-Check-Server Monitoring"}))
