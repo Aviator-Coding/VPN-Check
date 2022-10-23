@@ -1,14 +1,10 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
+	"errors"
 	"log"
-	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -20,7 +16,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type Block int64
+type Block int
 
 const (
 	Residential Block = iota
@@ -61,6 +57,8 @@ func (s Block) String() string {
 	}
 	return "unknown"
 }
+
+var toggle int = 1
 
 func main() {
 
@@ -117,9 +115,7 @@ func main() {
 		apiresponse := ApiResponse{
 			Date: time.Now(),
 		}
-		// for key, value := range c.GetReqHeaders() {
-		// 	log.Printf("%s=%s \n", key, value)
-		// }
+
 		realip := c.Get("X-Real-Ip")
 		if realip == "" {
 			realip = c.IP()
@@ -132,63 +128,50 @@ func main() {
 			return c.JSON(apiresponse)
 		}
 
-		// Create and Format new Request
-		requestUrl := fmt.Sprintf("http://v2.api.iphub.info/ip/%s", realip)
-		req, err := http.NewRequest("GET", requestUrl, nil)
-		if err != nil {
-			log.Printf("IP:%s Error:%s \n", realip, err)
-			apiresponse.Error = err.Error()
-			apiresponse.Success = false
-			return c.JSON(apiresponse)
-		}
-
-		// Send the Request ot the API
-		req.Header.Add("X-Key", os.Getenv("APIKEY"))
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			log.Printf("IP:%s Error:%s \n", realip, err)
-			apiresponse.Error = err.Error()
-			apiresponse.Success = false
-			return c.JSON(apiresponse)
-		}
-
-		// Read the Body Information from Request
-		defer resp.Body.Close()
-		body, err := io.ReadAll(resp.Body)
+		clientAddress, err := getData(realip)
 		if err != nil {
 			apiresponse.Error = err.Error()
 			apiresponse.Success = false
 			return c.JSON(apiresponse)
 		}
 
-		// Check if the Api Request has returned any Error
-		if strings.Contains(string(body), "\"error\"") {
-			log.Printf("IP:%s Error:%s \n", realip, body)
-			// Try to Parse the Error Message
-			var ipHubError IpHubError
-			err := json.Unmarshal(body, &ipHubError)
-			if err != nil {
-				apiresponse.Error = err.Error()
-				apiresponse.Success = false
-				return c.JSON(apiresponse)
-			}
-			apiresponse.Error = ipHubError.Error
-			apiresponse.Success = false
-			return c.JSON(apiresponse)
-
+		apiresponse.Message = "success"
+		apiresponse.Success = true
+		apiresponse.Data = clientAddress
+		return c.JSON(apiresponse)
+	})
+	app.Post("/api", func(c *fiber.Ctx) error {
+		apiresponse := ApiResponse{
+			Date: time.Now(),
 		}
 
-		// Parse Body Response into Object
-		var clientAddress ClientAddress
-		err = json.Unmarshal(body, &clientAddress)
+		payload := struct {
+			IP string `json:"ip"`
+		}{}
+
+		if err := c.BodyParser(&payload); err != nil {
+			apiresponse.Error = "has no rights"
+			apiresponse.Success = false
+			return c.JSON(apiresponse)
+		}
+
+		realip := payload.IP
+
+		// Check if the Sender send the Right Auth with the Request
+		if c.Get("X-KEY") != os.Getenv("SECURITYKEY") {
+			log.Printf("IP:%s Key:%s \n", realip, c.Get("X-KEY"))
+			apiresponse.Error = "has no rights"
+			apiresponse.Success = false
+			return c.JSON(apiresponse)
+		}
+
+		clientAddress, err := getData(realip)
 		if err != nil {
 			apiresponse.Error = err.Error()
 			apiresponse.Success = false
 			return c.JSON(apiresponse)
 		}
 
-		// Send Response back to User
-		log.Printf("IP:%s Response:%s \n", realip, body)
 		apiresponse.Message = "success"
 		apiresponse.Success = true
 		apiresponse.Data = clientAddress
@@ -197,7 +180,47 @@ func main() {
 	// Request for Metrics
 	app.Get("/metrics", monitor.New(monitor.Config{Title: "VPN-Check-Server Monitoring"}))
 
+	app.Get("/test", func(c *fiber.Ctx) error {
+		apiresponse := ApiResponse{
+			Date: time.Now(),
+		}
+
+		payload := struct {
+			IP string `json:"ip"`
+		}{}
+
+		if err := c.BodyParser(&payload); err != nil {
+			apiresponse.Error = "has no rights"
+			apiresponse.Success = false
+			return c.JSON(apiresponse)
+		}
+
+		realip := payload.IP
+
+		clientAddress, _ := CheckProxy(realip)
+
+		apiresponse.Message = "success"
+		apiresponse.Success = true
+		apiresponse.Data = clientAddress
+		return c.JSON(apiresponse)
+	})
+
 	app.Static("/", "./support.html")
 
 	log.Fatal(app.Listen(os.Getenv("PORT")))
+}
+
+func getData(iptocheck string) (ClientAddress, error) {
+	switch toggle {
+	case 1:
+		toggle++
+		return iphub(iptocheck)
+	case 2:
+		toggle = 1
+		return getipintel(iptocheck)
+		// case 3:
+		// 	toggle = 1
+		// 	return iphunter(iptocheck)
+	}
+	return ClientAddress{}, errors.New("no handler found")
 }
